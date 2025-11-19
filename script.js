@@ -1,5 +1,5 @@
 // Configuración - Reemplaza con la URL de tu Google Apps Script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUDYqeW810806O6JOB9a5eLPZ_kXowVO5Eg_XHqzrPHKxetjsifCQGeF6E_Ndr9eDhXg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1JBWdMbzZ6p7FKQCeunPHnB2bnWEFRBhwhBRBSYZZACwyvLoWY6HVsmslv-ka2bkaag/exec';
 
 // Estado global de la aplicación
 let students = [];
@@ -302,7 +302,7 @@ function reloadPage() {
  * Validación de configuración
  */
 function validateConfig() {
-    if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbwUDYqeW810806O6JOB9a5eLPZ_kXowVO5Eg_XHqzrPHKxetjsifCQGeF6E_Ndr9eDhXg/exec') {
+    if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbz1JBWdMbzZ6p7FKQCeunPHnB2bnWEFRBhwhBRBSYZZACwyvLoWY6HVsmslv-ka2bkaag/exec') {
         console.warn('⚠️  Recuerda configurar la URL de tu Google Apps Script en script.js');
         return false;
     }
