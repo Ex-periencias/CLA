@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Función principal de inicialización
 async function initializeApp() {
     try {
-        showLoading('Cargando lista de estudiantes...');
+        showLoading();
         await loadStudents();
         hideLoading();
     } catch (error) {
@@ -123,13 +123,13 @@ async function loadStudentData() {
         displayStudentResults(data);
         hideLoading();
         // Re-habilitar botón después de cargar exitosamente
-        consultButton.disabled = false;
+        document.getElementById('consultButton').disabled = false;
         
     } catch (error) {
         hideLoading();
         showError('Error al cargar datos del estudiante: ' + error.message);
         // Re-habilitar botón en caso de error
-        consultButton.disabled = false;
+        document.getElementById('consultButton').disabled = false;
     }
 }
 
@@ -261,7 +261,6 @@ function formatValue(value) {
 
 /**
  * Funciones de utilidad para mostrar/ocultar elementos
- * MEJORADAS CON INDICADORES DINÁMICOS Y OVERLAY
  */
 function showLoading(message) {
     // Crear overlay de fondo si no existe
