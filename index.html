@@ -23,6 +23,10 @@
                     Consultar Calificaciones
                 </button>
             </div>
+        <div id="noData" class="no-data" style="display: none;">
+            <p>No se encontraron datos para este alumno.</p>
+            <button onclick="loadStudentData()" class="retry-btn">Intentar de nuevo</button>
+        </div>
         </div>
 
         <div id="results" class="results-container" style="display: none;">
@@ -46,10 +50,6 @@
             <button onclick="hideError()" class="error-btn">Intentar de nuevo</button>
         </div>
 
-        <div id="noData" class="no-data" style="display: none;">
-            <p>No se encontraron datos para este alumno.</p>
-            <button onclick="loadStudentData()" class="retry-btn">Intentar de nuevo</button>
-        </div>
     </div>
 
     <script src="script.js"></script>
