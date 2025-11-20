@@ -226,11 +226,19 @@ body {
 
 /* Estados de carga y error */
 .loading {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 9999 !important;
+    min-width: 300px !important;
+    max-width: 400px !important;
+    width: 90% !important;
     text-align: center;
     padding: 60px 20px;
     background: white;
     border-radius: 15px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     border: 2px solid #667eea;
     animation: fadeIn 0.3s ease-in;
 }
@@ -403,37 +411,20 @@ body {
     background: #a8a8a8;
 }
 
-/* INDICADOR DE CARGA FIJO */
-.loading-fixed {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    z-index: 9999 !important;
-    min-width: 300px !important;
-    max-width: 400px !important;
-    width: 90% !important;
-    background: white !important;
-    border-radius: 15px !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
-    border: 2px solid #667eea !important;
-    animation: fadeIn 0.3s ease-in !important;
-}
-
-/* Para móviles */
+/* Para móviles - indicador de carga fijo */
 @media (max-width: 768px) {
-    .loading-fixed {
+    .loading {
         min-width: 280px;
         max-width: 90vw;
         width: 90vw;
         padding: 40px 15px;
     }
     
-    .loading-fixed p {
+    .loading p {
         font-size: 14px;
     }
     
-    .loading-fixed .loading-spinner {
+    .loading .loading-spinner {
         width: 40px;
         height: 40px;
     }
