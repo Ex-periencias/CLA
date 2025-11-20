@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Función principal de inicialización
 async function initializeApp() {
     try {
-        showLoading();
+        showLoading('Cargando lista de estudiantes...');
         await loadStudents();
         hideLoading();
     } catch (error) {
@@ -88,6 +88,7 @@ function handleStudentSelection(event) {
 async function loadStudentData() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudent = studentSelect.value;
+    const consultButton = document.getElementById('consultButton');
     
     if (!selectedStudent) {
         showError('Por favor selecciona un estudiante');
@@ -95,7 +96,9 @@ async function loadStudentData() {
     }
     
     try {
-        showLoading();
+        // Deshabilitar botón y mostrar loading
+        consultButton.disabled = true;
+        showLoading(`Cargando datos de ${selectedStudent}...`);
         hideError();
         hideNoData();
         
@@ -118,10 +121,15 @@ async function loadStudentData() {
         
         currentStudent = data;
         displayStudentResults(data);
+        hideLoading();
+        // Re-habilitar botón después de cargar exitosamente
+        consultButton.disabled = false;
         
     } catch (error) {
         hideLoading();
         showError('Error al cargar datos del estudiante: ' + error.message);
+        // Re-habilitar botón en caso de error
+        consultButton.disabled = false;
     }
 }
 
@@ -253,9 +261,19 @@ function formatValue(value) {
 
 /**
  * Funciones de utilidad para mostrar/ocultar elementos
+ * MEJORADAS CON INDICADORES DINÁMICOS
  */
-function showLoading() {
-    document.getElementById('loading').style.display = 'block';
+function showLoading(message) {
+    const loadingElement = document.getElementById('loading');
+    const loadingText = loadingElement.querySelector('p');
+    
+    if (message) {
+        loadingText.textContent = message;
+    } else {
+        loadingText.textContent = 'Cargando datos...';
+    }
+    
+    loadingElement.style.display = 'block';
 }
 
 function hideLoading() {
