@@ -263,15 +263,6 @@ function formatValue(value) {
  * Funciones de utilidad para mostrar/ocultar elementos
  */
 function showLoading(message) {
-    // Crear overlay de fondo si no existe
-    let overlay = document.getElementById('loadingOverlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'loadingOverlay';
-        overlay.className = 'loading-overlay';
-        document.body.appendChild(overlay);
-    }
-    
     const loadingElement = document.getElementById('loading');
     const loadingText = loadingElement.querySelector('p');
     
@@ -281,25 +272,11 @@ function showLoading(message) {
         loadingText.textContent = 'Cargando datos...';
     }
     
-    // Mostrar overlay y indicador
-    overlay.style.display = 'block';
     loadingElement.style.display = 'block';
-    
-    // Prevenir scroll del body durante la carga
-    document.body.style.overflow = 'hidden';
 }
 
 function hideLoading() {
-    const overlay = document.getElementById('loadingOverlay');
-    
     document.getElementById('loading').style.display = 'none';
-    
-    if (overlay) {
-        overlay.style.display = 'none';
-    }
-    
-    // Restaurar scroll del body
-    document.body.style.overflow = 'auto';
 }
 
 function showError(message) {
