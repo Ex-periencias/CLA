@@ -233,29 +233,6 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     border: 2px solid #667eea;
     animation: fadeIn 0.3s ease-in;
-    /* NUEVA: Posición fija para mantener visible durante cargas */
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-    min-width: 300px;
-    max-width: 400px;
-    width: 90%;
-    /* Superposición de fondo para enfocar la atención */
-    backdrop-filter: blur(10px);
-}
-
-/* Superposición de fondo durante carga */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 9998;
-    animation: fadeIn 0.3s ease-in;
 }
 
 .loading p {
@@ -380,27 +357,7 @@ body {
     .materia-table td {
         padding: 8px 4px;
     }
-    
-    /* NUEVA: Estilos responsive para loading fijo */
-    .loading {
-        min-width: 280px;
-        max-width: 90vw;
-        width: 90vw;
-        padding: 40px 15px;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    .loading p {
-        font-size: 14px;
-        margin-top: 15px;
-    }
-    
-    .loading-spinner {
-        width: 40px;
-        height: 40px;
-    }
+
 }
 
 @media (max-width: 480px) {
