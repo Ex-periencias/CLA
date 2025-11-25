@@ -383,24 +383,8 @@ body {
     margin-bottom: 8px;
 }
 
-/* Colores para calificaciones */
-.materia-promedio.aprobado {
-    color: #28a745;
-}
-
-.materia-promedio.alerta {
-    color: #fd7e14;
-}
-
-.materia-promedio.reprobado {
-    color: #dc3545;
-}
-
-.materia-status {
-    font-size: 14px;
-    color: #6C757D;
-    font-weight: 500;
-}
+/* Calificación promedio - sin clasificación de color */
+/* Mantiene el estilo base sin etiquetas de aprobado/reprobado */
 
 .materia-actividades {
     margin-top: 16px;
