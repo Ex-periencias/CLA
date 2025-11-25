@@ -1,5 +1,5 @@
 // Configuración - Reemplaza con la URL de tu Google Apps Script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWS8w7cI6hGS5Gq3goiaLKHqz1hADJXCA39T9W8Ib0mcmftFHGhGsOV5DywytcmBq2fQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhIJ5xyVo3oT4dMVdYMiegUkQFtX5G2ui6ktfw1GXigpSC2keECZr501dCBs2FonywUA/exec';
 
 // Estado global de la aplicación
 let students = [];
@@ -203,13 +203,19 @@ function createMateriaCard(materiaName, materiaData) {
     
     header.appendChild(title);
     
-    // Calificación promedio (sin clasificación de aprobado/reprobado)
-    if (materiaData.calificacionTotal !== undefined) {
+    // Calificación Real de "Calificación Total" (sin clasificación de aprobado/reprobado)
+    if (materiaData.calificacionReal !== undefined && materiaData.calificacionReal !== null) {
+        const promedioElement = document.createElement('div');
+        promedioElement.className = 'materia-promedio';
+        promedioElement.textContent = formatValue(materiaData.calificacionReal);
+        
+        // Sin clasificación de color - mantener solo el valor real de "Calificación Total"
+        header.appendChild(promedioElement);
+    } else if (materiaData.calificacionTotal !== undefined) {
+        // Fallback al promedio calculado si no hay calificacionReal
         const promedioElement = document.createElement('div');
         promedioElement.className = 'materia-promedio';
         promedioElement.textContent = formatValue(materiaData.calificacionTotal);
-        
-        // Sin clasificación de color - mantener solo el valor
         header.appendChild(promedioElement);
     }
     
