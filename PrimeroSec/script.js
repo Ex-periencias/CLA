@@ -1,5 +1,5 @@
 // Configuración - Reemplaza con la URL de tu Google Apps Script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyefr_6-w4KxcqNciDSRHTisN5zW0nIwUVmAoZZlOmugdLC_ybxX7UlGGH1gdS586gb/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWS8w7cI6hGS5Gq3goiaLKHqz1hADJXCA39T9W8Ib0mcmftFHGhGsOV5DywytcmBq2fQ/exec';
 
 // Estado global de la aplicación
 let students = [];
