@@ -1,1 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Actividades - Salones de Alumnos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">Consulta Rápida de Evaluaciones</h1>
+        </header>
 
+        <div class="controls">
+            <div class="student-selector">
+                <label for="studentSelect">Seleccionar Alumno:</label>
+                <select id="studentSelect" class="student-dropdown">
+                    <option value="">-- Selecciona un alumno --</option>
+                </select>
+            </div>
+
+            <!-- NUEVO: Selector de períodos -->
+            <div class="periodo-selector">
+                <label>Seleccionar Período:</label>
+                <div class="radio-group">
+                    <input type="radio" name="periodo" value="P1" id="periodo1" checked>
+                    <label for="periodo1">Período 1</label>
+                    
+                    <input type="radio" name="periodo" value="P2" id="periodo2">
+                    <label for="periodo2">Período 2</label>
+                    
+                    <input type="radio" name="periodo" value="P3" id="periodo3">
+                    <label for="periodo3">Período 3</label>
+                </div>
+            </div>
+
+            <div class="consult-container">
+                <button id="consultButton" class="consult-btn" disabled>
+                    Consultar Calificaciones
+                </button>
+            </div>
+        </div>
+
+        <div id="results" class="results-container" style="display: none;">
+            <div class="results-header">
+                <h2 id="studentName" class="student-name"></h2>
+                <button id="refreshButton" class="refresh-btn">Actualizar Datos</button>
+            </div>
+            
+            <div id="materiasContainer" class="materias-container">
+                <!-- Las materias se cargarán dinámicamente aquí -->
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Cargando datos...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <p id="errorMessage"></p>
+            <button onclick="hideError()" class="error-btn">Intentar de nuevo</button>
+        </div>
+
+        <div id="noData" class="no-data" style="display: none;">
+            <p>No se encontraron datos para este alumno.</p>
+            <button onclick="loadStudentData()" class="retry-btn">Intentar de nuevo</button>
+        </div>
+    </div>
+
+    <!-- Indicador de carga FIJO (fuera del contenedor) -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Cargando datos...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
