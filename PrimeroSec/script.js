@@ -153,10 +153,13 @@ async function loadStudentData() {
  * Muestra los resultados del estudiante en la interfaz
  */
 function displayStudentResults(data) {
-    // Actualizar nombre del estudiante con período
+    // Actualizar nombre del estudiante
     const studentNameElement = document.getElementById('studentName');
+    const studentMetaElement = document.getElementById('studentMeta');
     const currentPeriodo = getSelectedPeriodo();
-    studentNameElement.textContent = `Resultados para el Alumno: ${data.student} - ${currentPeriodo}`;
+    
+    studentNameElement.textContent = data.student;
+    studentMetaElement.textContent = `Período seleccionado: ${currentPeriodo}`;
     
     // Mostrar contenedor de resultados
     const resultsContainer = document.getElementById('results');
@@ -183,77 +186,100 @@ function renderMaterias(studentData) {
 }
 
 /**
- * Crea una card para una materia específica
+ * Crea una tarjeta profesional para una materia específica
  */
 function createMateriaCard(materiaName, materiaData) {
     const card = document.createElement('div');
-    card.className = 'materia-card';
+    card.className = 'materia-card fade-in';
     
     // Header de la materia
     const header = document.createElement('div');
     header.className = 'materia-header';
-    header.textContent = materiaName;
     
-    // Tabla de la materia
-    const table = document.createElement('table');
-    table.className = 'materia-table';
+    // Título de la materia
+    const title = document.createElement('h3');
+    title.className = 'materia-title';
+    title.textContent = materiaName.replace(/\s+P[1-3]$/, ''); // Quitar período del nombre
     
-    // Crear tbody
-    const tbody = document.createElement('tbody');
+    header.appendChild(title);
     
-    // Fila de materia
-    const materiaRow = createTableRow('Materia', materiaName, 'activity-cell');
-    tbody.appendChild(materiaRow);
+    // Calificación promedio
+    if (materiaData.calificacionTotal !== undefined) {
+        const promedioElement = document.createElement('div');
+        promedioElement.className = 'materia-promedio';
+        promedioElement.textContent = formatValue(materiaData.calificacionTotal);
+        
+        // Clasificar calificación por color
+        const promedio = materiaData.calificacionTotal;
+        if (promedio >= 7) {
+            promedioElement.classList.add('aprobado');
+        } else if (promedio >= 6) {
+            promedioElement.classList.add('alerta');
+        } else {
+            promedioElement.classList.add('reprobado');
+        }
+        
+        header.appendChild(promedioElement);
+        
+        // Estado de la materia
+        const statusElement = document.createElement('div');
+        statusElement.className = 'materia-status';
+        statusElement.textContent = promedio >= 7 ? 'Aprobado' : promedio >= 6 ? 'En Riesgo' : 'Reprobado';
+        header.appendChild(statusElement);
+    }
     
-    // Filas de actividades
+    card.appendChild(header);
+    
+    // Lista de actividades
+    const actividadesContainer = document.createElement('div');
+    actividadesContainer.className = 'materia-actividades';
+    
+    const actividadesList = document.createElement('ul');
+    actividadesList.className = 'actividades-list';
+    
+    // Agregar actividades regulares
     if (materiaData.actividades) {
         Object.keys(materiaData.actividades).forEach(activityName => {
             const value = materiaData.actividades[activityName];
-            const row = createTableRow(activityName, value, 'activity-cell');
-            tbody.appendChild(row);
+            const listItem = createActividadItem(activityName, value);
+            actividadesList.appendChild(listItem);
         });
     }
     
-    // Filas de variantes
+    // Agregar actividades variantes
     if (materiaData.variantes) {
         Object.keys(materiaData.variantes).forEach(variantName => {
             const value = materiaData.variantes[variantName];
-            const row = createTableRow(variantName, value, 'variant-cell');
-            tbody.appendChild(row);
+            const listItem = createActividadItem(variantName, value);
+            actividadesList.appendChild(listItem);
         });
     }
     
-    // Fila de calificación total
-    if (materiaData.calificacionTotal !== undefined) {
-        const totalRow = createTableRow('Calificación Total', materiaData.calificacionTotal, 'total-cell');
-        tbody.appendChild(totalRow);
-    }
-    
-    table.appendChild(tbody);
-    card.appendChild(header);
-    card.appendChild(table);
+    actividadesContainer.appendChild(actividadesList);
+    card.appendChild(actividadesContainer);
     
     return card;
 }
 
 /**
- * Crea una fila de tabla
+ * Crea un elemento de lista para una actividad específica
  */
-function createTableRow(label, value, cssClass) {
-    const row = document.createElement('tr');
+function createActividadItem(activityName, value) {
+    const listItem = document.createElement('li');
+    listItem.className = 'actividad-item';
     
-    const labelCell = document.createElement('td');
-    labelCell.textContent = label;
-    labelCell.className = cssClass;
+    const nombreElement = document.createElement('span');
+    nombreElement.className = 'actividad-nombre';
+    nombreElement.textContent = activityName;
     
-    const valueCell = document.createElement('td');
-    valueCell.textContent = formatValue(value);
-    valueCell.className = cssClass;
+    const calificacionElement = document.createElement('span');
+    calificacionElement.className = 'actividad-calificacion';
+    calificacionElement.textContent = formatValue(value);
     
-    row.appendChild(labelCell);
-    row.appendChild(valueCell);
+    listItem.appendChild(nombreElement);
+    listItem.appendChild(calificacionElement);
     
-    return row;
+    return listItem;
 }
 
 /**
