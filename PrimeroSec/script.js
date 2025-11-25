@@ -222,48 +222,38 @@ function createMateriaCard(materiaName, materiaData) {
     const actividadesList = document.createElement('ul');
     actividadesList.className = 'actividades-list';
     
-    // Variables para separar Calificación Final
-    let calificacionFinalItem = null;
-    let calificacionFinalValue = null;
-    
-    // Agregar actividades regulares (excepto Calificación Final)
+    // Agregar actividades regulares (EXCLUYENDO 'Calificación total')
     if (materiaData.actividades) {
         Object.keys(materiaData.actividades).forEach(activityName => {
             const value = materiaData.actividades[activityName];
             
-            // Separar Calificación Final para ponerla al final
-            if (activityName.toLowerCase().includes('calificación final') || 
-                activityName.toLowerCase().includes('calificacion final')) {
-                calificacionFinalItem = activityName;
-                calificacionFinalValue = value;
-            } else {
-                const listItem = createActividadItem(activityName, value);
-                actividadesList.appendChild(listItem);
+            // EXCLUIR 'Calificación total' de la lista - va solo al promedio superior
+            if (activityName.toLowerCase().includes('calificación total') || 
+                activityName.toLowerCase().includes('calificacion total')) {
+                // No incluir en lista - ya se muestra como promedio
+                return;
             }
+            
+            const listItem = createActividadItem(activityName, value);
+            actividadesList.appendChild(listItem);
         });
     }
     
-    // Agregar actividades variantes (excepto Calificación Final)
+    // Agregar actividades variantes (EXCLUYENDO 'Calificación total')
     if (materiaData.variantes) {
         Object.keys(materiaData.variantes).forEach(variantName => {
             const value = materiaData.variantes[variantName];
             
-            // Separar Calificación Final para ponerla al final
-            if (variantName.toLowerCase().includes('calificación final') || 
-                variantName.toLowerCase().includes('calificacion final')) {
-                calificacionFinalItem = variantName;
-                calificacionFinalValue = value;
-            } else {
-                const listItem = createActividadItem(variantName, value);
-                actividadesList.appendChild(listItem);
+            // EXCLUIR 'Calificación total' de la lista - va solo al promedio superior
+            if (variantName.toLowerCase().includes('calificación total') || 
+                variantName.toLowerCase().includes('calificacion total')) {
+                // No incluir en lista - ya se muestra como promedio
+                return;
             }
+            
+            const listItem = createActividadItem(variantName, value);
+            actividadesList.appendChild(listItem);
         });
-    }
-    
-    // Agregar Calificación Final al final (si existe)
-    if (calificacionFinalItem && calificacionFinalValue !== null) {
-        const listItem = createActividadItem(calificacionFinalItem, calificacionFinalValue);
-        actividadesList.appendChild(listItem);
     }
     
     actividadesContainer.appendChild(actividadesList);
