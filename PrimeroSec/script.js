@@ -203,29 +203,14 @@ function createMateriaCard(materiaName, materiaData) {
     
     header.appendChild(title);
     
-    // Calificación promedio
+    // Calificación promedio (sin clasificación de aprobado/reprobado)
     if (materiaData.calificacionTotal !== undefined) {
         const promedioElement = document.createElement('div');
         promedioElement.className = 'materia-promedio';
         promedioElement.textContent = formatValue(materiaData.calificacionTotal);
         
-        // Clasificar calificación por color
-        const promedio = materiaData.calificacionTotal;
-        if (promedio >= 7) {
-            promedioElement.classList.add('aprobado');
-        } else if (promedio >= 6) {
-            promedioElement.classList.add('alerta');
-        } else {
-            promedioElement.classList.add('reprobado');
-        }
-        
+        // Sin clasificación de color - mantener solo el valor
         header.appendChild(promedioElement);
-        
-        // Estado de la materia
-        const statusElement = document.createElement('div');
-        statusElement.className = 'materia-status';
-        statusElement.textContent = promedio >= 7 ? 'Aprobado' : promedio >= 6 ? 'En Riesgo' : 'Reprobado';
-        header.appendChild(statusElement);
     }
     
     card.appendChild(header);
@@ -237,22 +222,48 @@ function createMateriaCard(materiaName, materiaData) {
     const actividadesList = document.createElement('ul');
     actividadesList.className = 'actividades-list';
     
-    // Agregar actividades regulares
+    // Variables para separar Calificación Final
+    let calificacionFinalItem = null;
+    let calificacionFinalValue = null;
+    
+    // Agregar actividades regulares (excepto Calificación Final)
     if (materiaData.actividades) {
         Object.keys(materiaData.actividades).forEach(activityName => {
             const value = materiaData.actividades[activityName];
-            const listItem = createActividadItem(activityName, value);
-            actividadesList.appendChild(listItem);
+            
+            // Separar Calificación Final para ponerla al final
+            if (activityName.toLowerCase().includes('calificación final') || 
+                activityName.toLowerCase().includes('calificacion final')) {
+                calificacionFinalItem = activityName;
+                calificacionFinalValue = value;
+            } else {
+                const listItem = createActividadItem(activityName, value);
+                actividadesList.appendChild(listItem);
+            }
         });
     }
     
-    // Agregar actividades variantes
+    // Agregar actividades variantes (excepto Calificación Final)
     if (materiaData.variantes) {
         Object.keys(materiaData.variantes).forEach(variantName => {
             const value = materiaData.variantes[variantName];
-            const listItem = createActividadItem(variantName, value);
-            actividadesList.appendChild(listItem);
+            
+            // Separar Calificación Final para ponerla al final
+            if (variantName.toLowerCase().includes('calificación final') || 
+                variantName.toLowerCase().includes('calificacion final')) {
+                calificacionFinalItem = variantName;
+                calificacionFinalValue = value;
+            } else {
+                const listItem = createActividadItem(variantName, value);
+                actividadesList.appendChild(listItem);
+            }
         });
+    }
+    
+    // Agregar Calificación Final al final (si existe)
+    if (calificacionFinalItem && calificacionFinalValue !== null) {
+        const listItem = createActividadItem(calificacionFinalItem, calificacionFinalValue);
+        actividadesList.appendChild(listItem);
     }
     
     actividadesContainer.appendChild(actividadesList);
