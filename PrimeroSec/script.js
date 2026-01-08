@@ -1,10 +1,11 @@
 // Configuración - Reemplaza con la URL de tu Google Apps Script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhIJ5xyVo3oT4dMVdYMiegUkQFtX5G2ui6ktfw1GXigpSC2keECZr501dCBs2FonywUA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyh7CqGU4Uf9sXbnurKaOUJVUONVRlLT4C4UsJgnDdrd9jfS8t7x_kYuYpqXJZfS4U67w/exec';
 
 // Estado global de la aplicación
 let students = [];
 let currentStudent = null;
-let selectedPeriodo = 'P1'; // NUEVO: Período seleccionado por defecto
+let selectedPeriodo = 'P1'; // Período seleccionado por defecto
+let selectedGrupo = 'A'; // Grupo seleccionado por defecto (A o B)
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
@@ -16,7 +17,8 @@ async function initializeApp() {
     try {
         showLoading();
         await loadStudents();
-        initializePeriodoSelector(); // NUEVO: Inicializar selector de períodos
+        initializePeriodoSelector(); // Inicializar selector de períodos
+        initializeGrupoSelector(); // Inicializar selector de grupos
         hideLoading();
     } catch (error) {
         hideLoading();
@@ -25,7 +27,23 @@ async function initializeApp() {
 }
 
 /**
- * NUEVO: Inicializar selector de períodos
+ * Inicializar selector de grupos (NUEVO)
+ */
+function initializeGrupoSelector() {
+    const grupoSelect = document.getElementById('grupoSelect');
+    grupoSelect.addEventListener('change', function() {
+        selectedGrupo = this.value;
+        console.log('Grupo seleccionado:', selectedGrupo);
+        // Si ya hay un estudiante seleccionado, recargar datos con el nuevo grupo
+        const studentSelect = document.getElementById('studentSelect');
+        if (studentSelect.value) {
+            loadStudentData();
+        }
+    });
+}
+
+/**
+ * Inicializar selector de períodos
  */
 function initializePeriodoSelector() {
     // Agregar listeners a radio buttons
@@ -33,6 +51,11 @@ function initializePeriodoSelector() {
         radio.addEventListener('change', function() {
             selectedPeriodo = this.value;
             console.log('Período seleccionado:', selectedPeriodo);
+            // Si ya hay un estudiante seleccionado, recargar datos con el nuevo período
+            const studentSelect = document.getElementById('studentSelect');
+            if (studentSelect.value) {
+                loadStudentData();
+            }
         });
     });
 }
@@ -118,7 +141,7 @@ async function loadStudentData() {
         hideError();
         hideNoData();
         
-        const response = await fetch(`${SCRIPT_URL}?action=getStudentData&student=${encodeURIComponent(selectedStudent)}&periodo=${currentPeriodo}`);
+        const response = await fetch(`${SCRIPT_URL}?action=getStudentData&student=${encodeURIComponent(selectedStudent)}&periodo=${currentPeriodo}&grupo=${selectedGrupo}`);
         
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
@@ -157,9 +180,10 @@ function displayStudentResults(data) {
     const studentNameElement = document.getElementById('studentName');
     const studentMetaElement = document.getElementById('studentMeta');
     const currentPeriodo = getSelectedPeriodo();
+    const currentGrupo = getSelectedGrupo();
     
     studentNameElement.textContent = data.student;
-    studentMetaElement.textContent = `Período seleccionado: ${currentPeriodo}`;
+    studentMetaElement.textContent = `${currentPeriodo} - Grupo ${currentGrupo}`;
     
     // Mostrar contenedor de resultados
     const resultsContainer = document.getElementById('results');
@@ -358,6 +382,14 @@ function getSelectedPeriodo() {
 }
 
 /**
+ * Función para obtener el grupo seleccionado (NUEVO)
+ */
+function getSelectedGrupo() {
+    const select = document.getElementById('grupoSelect');
+    return select ? select.value : 'A';
+}
+
+/**
  * Función para actualizar datos (botón refresh)
  */
 document.getElementById('refreshButton')?.addEventListener('click', function() {
@@ -377,7 +409,7 @@ function reloadPage() {
  * Validación de configuración
  */
 function validateConfig() {
-    if (SCRIPT_URL === 'TU_GOOGLE_APPS_SCRIPT_URL_AQUI') {
+    if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyh7CqGU4Uf9sXbnurKaOUJVUONVRlLT4C4UsJgnDdrd9jfS8t7x_kYuYpqXJZfS4U67w/exec') {
         console.warn('⚠️  Recuerda configurar la URL de tu Google Apps Script en script.js');
         return false;
     }
