@@ -1,9 +1,11 @@
 // Configuración - Reemplaza con la URL de tu Google Apps Script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSPKezxkbOF3TQuMIdg2pNy6azxXKdxF22FplBhodmrUE5S3DdaEo7ZkOkQiwCghuTEQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyh7CqGU4Uf9sXbnurKaOUJVUONVRlLT4C4UsJgnDdrd9jfS8t7x_kYuYpqXJZfS4U67w/exec';
 
 // Estado global de la aplicación
 let students = [];
 let currentStudent = null;
+let selectedPeriodo = 'P1'; // Período seleccionado por defecto
+let selectedGrupo = 'A'; // Grupo seleccionado por defecto (A o B)
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,11 +17,47 @@ async function initializeApp() {
     try {
         showLoading();
         await loadStudents();
+        initializePeriodoSelector(); // Inicializar selector de períodos
+        initializeGrupoSelector(); // Inicializar selector de grupos
         hideLoading();
     } catch (error) {
         hideLoading();
         showError('Error al cargar la lista de estudiantes: ' + error.message);
     }
+}
+
+/**
+ * Inicializar selector de grupos (NUEVO)
+ */
+function initializeGrupoSelector() {
+    const grupoSelect = document.getElementById('grupoSelect');
+    grupoSelect.addEventListener('change', function() {
+        selectedGrupo = this.value;
+        console.log('Grupo seleccionado:', selectedGrupo);
+        // Si ya hay un estudiante seleccionado, recargar datos con el nuevo grupo
+        const studentSelect = document.getElementById('studentSelect');
+        if (studentSelect.value) {
+            loadStudentData();
+        }
+    });
+}
+
+/**
+ * Inicializar selector de períodos
+ */
+function initializePeriodoSelector() {
+    // Agregar listeners a radio buttons
+    document.querySelectorAll('input[name="periodo"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            selectedPeriodo = this.value;
+            console.log('Período seleccionado:', selectedPeriodo);
+            // Si ya hay un estudiante seleccionado, recargar datos con el nuevo período
+            const studentSelect = document.getElementById('studentSelect');
+            if (studentSelect.value) {
+                loadStudentData();
+            }
+        });
+    });
 }
 
 /**
@@ -89,6 +127,7 @@ async function loadStudentData() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudent = studentSelect.value;
     const consultButton = document.getElementById('consultButton');
+    const currentPeriodo = getSelectedPeriodo(); // NUEVO: Obtener período seleccionado
     
     if (!selectedStudent) {
         showError('Por favor selecciona un estudiante');
@@ -98,11 +137,11 @@ async function loadStudentData() {
     try {
         // Deshabilitar botón y mostrar loading
         consultButton.disabled = true;
-        showLoading(`Cargando datos de ${selectedStudent}...`);
+        showLoading(`Cargando datos de ${selectedStudent} para ${currentPeriodo}...`);
         hideError();
         hideNoData();
         
-        const response = await fetch(`${SCRIPT_URL}?action=getStudentData&student=${encodeURIComponent(selectedStudent)}`);
+        const response = await fetch(`${SCRIPT_URL}?action=getStudentData&student=${encodeURIComponent(selectedStudent)}&periodo=${currentPeriodo}&grupo=${selectedGrupo}`);
         
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
@@ -139,7 +178,12 @@ async function loadStudentData() {
 function displayStudentResults(data) {
     // Actualizar nombre del estudiante
     const studentNameElement = document.getElementById('studentName');
-    studentNameElement.textContent = `Resultados para el Alumno: ${data.student}`;
+    const studentMetaElement = document.getElementById('studentMeta');
+    const currentPeriodo = getSelectedPeriodo();
+    const currentGrupo = getSelectedGrupo();
+    
+    studentNameElement.textContent = data.student;
+    studentMetaElement.textContent = `${currentPeriodo} - Grupo ${currentGrupo}`;
     
     // Mostrar contenedor de resultados
     const resultsContainer = document.getElementById('results');
@@ -166,77 +210,107 @@ function renderMaterias(studentData) {
 }
 
 /**
- * Crea una card para una materia específica
+ * Crea una tarjeta profesional para una materia específica
  */
 function createMateriaCard(materiaName, materiaData) {
     const card = document.createElement('div');
-    card.className = 'materia-card';
+    card.className = 'materia-card fade-in';
     
     // Header de la materia
     const header = document.createElement('div');
     header.className = 'materia-header';
-    header.textContent = materiaName;
     
-    // Tabla de la materia
-    const table = document.createElement('table');
-    table.className = 'materia-table';
+    // Título de la materia
+    const title = document.createElement('h3');
+    title.className = 'materia-title';
+    title.textContent = materiaName.replace(/\s+P[1-3]$/, ''); // Quitar período del nombre
     
-    // Crear tbody
-    const tbody = document.createElement('tbody');
+    header.appendChild(title);
     
-    // Fila de materia
-    const materiaRow = createTableRow('Materia', materiaName, 'activity-cell');
-    tbody.appendChild(materiaRow);
+    // Calificación Real de "Calificación Total" (sin clasificación de aprobado/reprobado)
+    if (materiaData.calificacionReal !== undefined && materiaData.calificacionReal !== null) {
+        const promedioElement = document.createElement('div');
+        promedioElement.className = 'materia-promedio';
+        promedioElement.textContent = formatValue(materiaData.calificacionReal);
+        
+        // Sin clasificación de color - mantener solo el valor real de "Calificación Total"
+        header.appendChild(promedioElement);
+    } else if (materiaData.calificacionTotal !== undefined) {
+        // Fallback al promedio calculado si no hay calificacionReal
+        const promedioElement = document.createElement('div');
+        promedioElement.className = 'materia-promedio';
+        promedioElement.textContent = formatValue(materiaData.calificacionTotal);
+        header.appendChild(promedioElement);
+    }
     
-    // Filas de actividades
+    card.appendChild(header);
+    
+    // Lista de actividades
+    const actividadesContainer = document.createElement('div');
+    actividadesContainer.className = 'materia-actividades';
+    
+    const actividadesList = document.createElement('ul');
+    actividadesList.className = 'actividades-list';
+    
+    // Agregar actividades regulares (EXCLUYENDO 'Calificación total')
     if (materiaData.actividades) {
         Object.keys(materiaData.actividades).forEach(activityName => {
             const value = materiaData.actividades[activityName];
-            const row = createTableRow(activityName, value, 'activity-cell');
-            tbody.appendChild(row);
+            
+            // EXCLUIR 'Calificación total' de la lista - va solo al promedio superior
+            if (activityName.toLowerCase().includes('calificación total') || 
+                activityName.toLowerCase().includes('calificacion total')) {
+                // No incluir en lista - ya se muestra como promedio
+                return;
+            }
+            
+            const listItem = createActividadItem(activityName, value);
+            actividadesList.appendChild(listItem);
         });
     }
     
-    // Filas de variantes
+    // Agregar actividades variantes (EXCLUYENDO 'Calificación total')
     if (materiaData.variantes) {
         Object.keys(materiaData.variantes).forEach(variantName => {
             const value = materiaData.variantes[variantName];
-            const row = createTableRow(variantName, value, 'variant-cell');
-            tbody.appendChild(row);
+            
+            // EXCLUIR 'Calificación total' de la lista - va solo al promedio superior
+            if (variantName.toLowerCase().includes('calificación total') || 
+                variantName.toLowerCase().includes('calificacion total')) {
+                // No incluir en lista - ya se muestra como promedio
+                return;
+            }
+            
+            const listItem = createActividadItem(variantName, value);
+            actividadesList.appendChild(listItem);
         });
     }
     
-    // Fila de calificación total
-    if (materiaData.calificacionTotal !== undefined) {
-        const totalRow = createTableRow('Calificación Total', materiaData.calificacionTotal, 'total-cell');
-        tbody.appendChild(totalRow);
-    }
-    
-    table.appendChild(tbody);
-    card.appendChild(header);
-    card.appendChild(table);
+    actividadesContainer.appendChild(actividadesList);
+    card.appendChild(actividadesContainer);
     
     return card;
 }
 
 /**
- * Crea una fila de tabla
+ * Crea un elemento de lista para una actividad específica
  */
-function createTableRow(label, value, cssClass) {
-    const row = document.createElement('tr');
+function createActividadItem(activityName, value) {
+    const listItem = document.createElement('li');
+    listItem.className = 'actividad-item';
     
-    const labelCell = document.createElement('td');
-    labelCell.textContent = label;
-    labelCell.className = cssClass;
+    const nombreElement = document.createElement('span');
+    nombreElement.className = 'actividad-nombre';
+    nombreElement.textContent = activityName;
     
-    const valueCell = document.createElement('td');
-    valueCell.textContent = formatValue(value);
-    valueCell.className = cssClass;
+    const calificacionElement = document.createElement('span');
+    calificacionElement.className = 'actividad-calificacion';
+    calificacionElement.textContent = formatValue(value);
     
-    row.appendChild(labelCell);
-    row.appendChild(valueCell);
+    listItem.appendChild(nombreElement);
+    listItem.appendChild(calificacionElement);
     
-    return row;
+    return listItem;
 }
 
 /**
@@ -300,6 +374,22 @@ function hideNoData() {
 }
 
 /**
+ * NUEVO: Función para obtener el período seleccionado
+ */
+function getSelectedPeriodo() {
+    const radio = document.querySelector('input[name="periodo"]:checked');
+    return radio ? radio.value : 'P1';
+}
+
+/**
+ * Función para obtener el grupo seleccionado (NUEVO)
+ */
+function getSelectedGrupo() {
+    const select = document.getElementById('grupoSelect');
+    return select ? select.value : 'A';
+}
+
+/**
  * Función para actualizar datos (botón refresh)
  */
 document.getElementById('refreshButton')?.addEventListener('click', function() {
@@ -319,7 +409,7 @@ function reloadPage() {
  * Validación de configuración
  */
 function validateConfig() {
-    if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzSPKezxkbOF3TQuMIdg2pNy6azxXKdxF22FplBhodmrUE5S3DdaEo7ZkOkQiwCghuTEQ/exec') {
+    if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyh7CqGU4Uf9sXbnurKaOUJVUONVRlLT4C4UsJgnDdrd9jfS8t7x_kYuYpqXJZfS4U67w/exec') {
         console.warn('⚠️  Recuerda configurar la URL de tu Google Apps Script en script.js');
         return false;
     }
