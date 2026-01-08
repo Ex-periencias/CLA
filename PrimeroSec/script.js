@@ -1,5 +1,38 @@
-// Configuración - Reemplaza con la URL de tu Google Apps Script
+// ========================================
+// CONFIGURACIÓN DEL SISTEMA
+// ========================================
+// ⚠️ IMPORTANTE: Reemplaza esta URL con la de tu Google Apps Script desplegado
+// Para obtenerla: Google Apps Script → Deploy → New deployment → Web app → Copy URL
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyh7CqGU4Uf9sXbnurKaOUJVUONVRlLT4C4UsJgnDdrd9jfS8t7x_kYuYpqXJZfS4U67w/exec';
+
+// ========================================
+// ESTADO GLOBAL DE LA APLICACIÓN
+// ========================================
+let students = [];
+let currentStudent = null;
+let selectedPeriodo = 'P1'; // Período seleccionado por defecto
+let selectedGrupo = 'A'; // Grupo seleccionado por defecto (A o B)
+
+// ========================================
+// VALIDACIÓN DE CONFIGURACIÓN
+// ========================================
+function validateConfig() {
+    if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyh7CqGU4Uf9sXbnurKaOUJVUONVRlLT4C4UsJgnDdrd9jfS8t7x_kYuYpqXJZfS4U67w/exec' || 
+        SCRIPT_URL === '' || 
+        !SCRIPT_URL.includes('script.google.com')) {
+        return {
+            valid: false,
+            message: '⚠️ CONFIGURACIÓN REQUERIDA\n\n' +
+                    'La URL del Google Apps Script no está configurada.\n\n' +
+                    'Pasos para configurar:\n' +
+                    '1. Ve a script.google.com\n' +
+                    '2. Despliega tu proyecto\n' +
+                    '3. Copia la URL del deployment (https://script.google.com/macros/s/.../exec)\n' +
+                    '4. Pégala en script.js línea 2'
+        };
+    }
+    return { valid: true };
+}
 
 // Estado global de la aplicación
 let students = [];
@@ -14,30 +47,60 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Función principal de inicialización
 async function initializeApp() {
+    // Validar configuración primero
+    const configCheck = validateConfig();
+    if (!configCheck.valid) {
+        showError(configCheck.message);
+        return;
+    }
+    
     try {
-        showLoading();
-        await loadStudents();
+        // Obtener el grupo seleccionado por defecto
+        selectedGrupo = getSelectedGrupo();
+        console.log('Grupo por defecto:', selectedGrupo);
+        
+        showLoading('Cargando estudiantes del Grupo ' + selectedGrupo + '...');
+        await loadStudents(selectedGrupo);
         initializePeriodoSelector(); // Inicializar selector de períodos
         initializeGrupoSelector(); // Inicializar selector de grupos
         hideLoading();
     } catch (error) {
         hideLoading();
-        showError('Error al cargar la lista de estudiantes: ' + error.message);
+        showError('Error al cargar: ' + error.message + 
+                 '<br><br><strong>Verifica:</strong><br>' +
+                 '- Que la URL del Google Apps Script sea correcta<br>' +
+                 '- Que el deployment esté configurado como "Anyone"<br>' +
+                 '- Que las hojas se llamen "Lista de Alumnos A" y "Lista de Alumnos B"');
+        console.error('Error completo:', error);
     }
 }
 
 /**
- * Inicializar selector de grupos (NUEVO)
+ * Inicializar selector de grupos
+ * Al cambiar el grupo, se recarga la lista de estudiantes
  */
 function initializeGrupoSelector() {
     const grupoSelect = document.getElementById('grupoSelect');
-    grupoSelect.addEventListener('change', function() {
+    grupoSelect.addEventListener('change', async function() {
         selectedGrupo = this.value;
-        console.log('Grupo seleccionado:', selectedGrupo);
-        // Si ya hay un estudiante seleccionado, recargar datos con el nuevo grupo
+        console.log('Grupo cambiado a:', selectedGrupo);
+        
+        // Limpiar selección de estudiante anterior
         const studentSelect = document.getElementById('studentSelect');
-        if (studentSelect.value) {
-            loadStudentData();
+        studentSelect.value = '';
+        document.getElementById('consultButton').disabled = true;
+        
+        // Ocultar resultados anteriores
+        document.getElementById('results').style.display = 'none';
+        
+        // Recargar la lista de estudiantes para el nuevo grupo
+        showLoading('Cargando estudiantes del Grupo ' + selectedGrupo + '...');
+        try {
+            await loadStudents(selectedGrupo);
+            hideLoading();
+        } catch (error) {
+            hideLoading();
+            showError('Error al cargar estudiantes: ' + error.message);
         }
     });
 }
@@ -62,13 +125,35 @@ function initializePeriodoSelector() {
 
 /**
  * Carga la lista de estudiantes desde Google Apps Script
+ * @param {string} grupo - El grupo del cual cargar estudiantes (A o B)
  */
-async function loadStudents() {
+async function loadStudents(grupo) {
     try {
-        const response = await fetch(`${SCRIPT_URL}?action=getStudents`);
+        const grupoParam = grupo || selectedGrupo || 'A';
+        console.log('Cargando estudiantes para grupo:', grupoParam);
+        console.log('URL del script:', SCRIPT_URL);
+        
+        const response = await fetch(`${SCRIPT_URL}?action=getStudents&grupo=${grupoParam}`);
         
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        students = data.students || [];
+        populateStudentDropdown();
+        console.log('Estudiantes cargados:', students.length);
+        
+    } catch (error) {
+        console.error('Error al cargar estudiantes:', error);
+        throw error;
+    }
+}
         }
         
         const data = await response.json();
@@ -93,12 +178,25 @@ function populateStudentDropdown() {
     const select = document.getElementById('studentSelect');
     select.innerHTML = '<option value="">-- Selecciona un alumno --</option>';
     
+    if (students.length === 0) {
+        console.log('No hay estudiantes en la lista para este grupo');
+        return;
+    }
+    
     students.forEach(student => {
         const option = document.createElement('option');
         option.value = student.nombre;
         option.textContent = `${student.numeroLista} - ${student.nombre}`;
         select.appendChild(option);
     });
+    
+    // Agregar event listener al dropdown
+    select.addEventListener('change', handleStudentSelection);
+}
+    
+    // Agregar event listener
+    select.addEventListener('change', handleStudentSelection);
+}
     
     // Agregar event listener
     select.addEventListener('change', handleStudentSelection);
@@ -403,17 +501,6 @@ document.getElementById('refreshButton')?.addEventListener('click', function() {
  */
 function reloadPage() {
     window.location.reload();
-}
-
-/**
- * Validación de configuración
- */
-function validateConfig() {
-    if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyh7CqGU4Uf9sXbnurKaOUJVUONVRlLT4C4UsJgnDdrd9jfS8t7x_kYuYpqXJZfS4U67w/exec') {
-        console.warn('⚠️  Recuerda configurar la URL de tu Google Apps Script en script.js');
-        return false;
-    }
-    return true;
 }
 
 /**
