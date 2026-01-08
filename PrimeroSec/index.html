@@ -33,22 +33,22 @@
         <!-- Panel de Selección -->
         <section class="selection-panel">
             <div class="panel-card">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="studentSelect" class="form-label">Seleccionar Alumno:</label>
-                        <select id="studentSelect" class="student-dropdown">
-                            <option value="">-- Selecciona un alumno --</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Selector de Grupo (NUEVO: Agregado para soportar Grupo A y B) -->
+                <!-- Selector de Grupo ( PRIMERO: elegir grupo → carga la lista de alumnos ) -->
                 <div class="form-row">
                     <div class="form-group">
                         <label for="grupoSelect" class="form-label">Seleccionar Grupo:</label>
                         <select id="grupoSelect" class="grupo-dropdown">
                             <option value="A">Grupo A</option>
                             <option value="B">Grupo B</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="studentSelect" class="form-label">Seleccionar Alumno:</label>
+                        <select id="studentSelect" class="student-dropdown">
+                            <option value="">-- Selecciona un grupo primero --</option>
                         </select>
                     </div>
                 </div>
