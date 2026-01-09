@@ -172,26 +172,7 @@ async function loadStudents(grupo) {
         throw error;
     }
 }
-        }
-        
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
-        students = data.students || [];
-        populateStudentDropdown();
-        
-    } catch (error) {
-        console.error('Error al cargar estudiantes:', error);
-        throw error;
-    }
-}
 
-/**
- * Llena el dropdown con la lista de estudiantes
- */
 /**
  * Llena el dropdown con la lista de estudiantes
  */
