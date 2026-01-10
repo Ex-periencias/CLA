@@ -37,7 +37,7 @@ body {
 .header {
     background: linear-gradient(135deg, #1C3F6F 0%, #2C5A9A 100%);
     padding: 0 32px;
-    height: 80px;
+    height: 160px;
     display: flex;
     align-items: center;
     box-shadow: 0 4px 12px rgba(28, 63, 111, 0.15);
