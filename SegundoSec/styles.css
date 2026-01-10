@@ -1,0 +1,680 @@
+/* ======================================== */
+/* ESTILOS PROFESIONALES - COLEGIO LIBERTADORES DE AMÉRICA */
+/* Sistema de Consulta de Calificaciones v2.0 */
+/* ======================================== */
+
+/* Reset y configuración base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #F8F9FA;
+    color: #212529;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Contenedor principal */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background-color: #F8F9FA;
+}
+
+/* ======================================== */
+/* HEADER PROFESIONAL DEL COLEGIO */
+/* ======================================== */
+.header {
+    background: linear-gradient(135deg, #1C3F6F 0%, #2C5A9A 100%);
+    padding: 0 32px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(28, 63, 111, 0.15);
+    border-bottom: 1px solid #E9ECEF;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+}
+
+/* Logo */
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.school-logo {
+    height: 56px;
+    width: auto;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.school-logo:hover {
+    transform: scale(1.05);
+}
+
+.school-logo {
+    height: 56px;
+    width: auto;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.school-logo:hover {
+    transform: scale(1.05);
+}
+
+/* Nombre del Colegio */
+.school-name {
+    flex: 1;
+    text-align: center;
+    color: white;
+}
+
+.school-title {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.system-title {
+    font-size: 18px;
+    font-weight: 400;
+    opacity: 0.9;
+    line-height: 1.3;
+}
+
+.header-actions {
+    width: 64px; /* Mismo ancho que el logo para balance */
+}
+
+/* ======================================== */
+/* PANEL DE SELECCIÓN */
+/* ======================================== */
+.selection-panel {
+    padding: 48px 32px 32px;
+}
+
+.panel-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 8px 24px rgba(28, 63, 111, 0.1);
+    border: 1px solid #E9ECEF;
+    transition: box-shadow 0.3s ease;
+}
+
+.panel-card:hover {
+    box-shadow: 0 12px 32px rgba(28, 63, 111, 0.15);
+}
+
+.form-row {
+    margin-bottom: 24px;
+}
+
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #212529;
+    line-height: 1.4;
+}
+
+/* Dropdown de estudiantes */
+.student-dropdown {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    font-size: 16px;
+    font-family: inherit;
+    border: 2px solid #E9ECEF;
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #212529;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236C757D' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 44px;
+}
+
+.student-dropdown:focus {
+    outline: none;
+    border-color: #1C3F6F;
+    box-shadow: 0 0 0 3px rgba(28, 63, 111, 0.1);
+}
+
+.student-dropdown:hover {
+    border-color: #1C3F6F;
+}
+
+/* Selector de períodos */
+.period-selector {
+    width: 100%;
+}
+
+.period-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Ocultar radios originales */
+.period-group input[type="radio"] {
+    display: none;
+}
+
+/* Estilos para labels que actúan como botones */
+.period-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    color: #6C757D;
+    background: #F8F9FA;
+    border: 1px solid #E9ECEF;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Estado activo */
+.period-group input[type="radio"]:checked + .period-label {
+    background: #1C3F6F;
+    color: #FFFFFF;
+    border-color: #1C3F6F;
+    box-shadow: 0 2px 4px rgba(28, 63, 111, 0.2);
+}
+
+/* Hover */
+.period-label:hover {
+    background: #F0F4FA;
+    border-color: #1C3F6F;
+}
+
+.period-group input[type="radio"]:checked + .period-label:hover {
+    background: #2C5A9A;
+    border-color: #2C5A9A;
+}
+
+/* Botón consultar */
+.consult-btn {
+    width: 100%;
+    height: 52px;
+    background: linear-gradient(135deg, #1C3F6F 0%, #2C5A9A 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.consult-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2C5A9A 0%, #4B82D9 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(28, 63, 111, 0.3);
+}
+
+.consult-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.consult-btn:disabled {
+    background: #E9ECEF;
+    color: #6C757D;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ======================================== */
+/* SECCIÓN DE RESULTADOS */
+/* ======================================== */
+.results-section {
+    padding: 32px;
+}
+
+.results-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding: 24px;
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(28, 63, 111, 0.08);
+    border: 1px solid #E9ECEF;
+}
+
+.student-info h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 8px;
+    line-height: 1.2;
+}
+
+.student-meta {
+    font-size: 16px;
+    color: #6C757D;
+    font-weight: 400;
+}
+
+.refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: fit-content;
+}
+
+.refresh-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.refresh-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Grid de materias */
+.materias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+/* Tarjetas de materia */
+.materia-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(28, 63, 111, 0.1);
+    border: 1px solid #E9ECEF;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.materia-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #1C3F6F 0%, #2C5A9A 100%);
+}
+
+.materia-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(28, 63, 111, 0.15);
+}
+
+.materia-header {
+    margin-bottom: 20px;
+}
+
+.materia-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.materia-promedio {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+/* Calificación promedio - sin clasificación de color */
+/* Mantiene el estilo base sin etiquetas de aprobado/reprobado */
+
+.materia-actividades {
+    margin-top: 16px;
+}
+
+.actividades-list {
+    list-style: none;
+}
+
+.actividad-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #F8F9FA;
+}
+
+.actividad-item:last-child {
+    border-bottom: none;
+}
+
+.actividad-nombre {
+    font-size: 14px;
+    color: #495057;
+    flex: 1;
+}
+
+.actividad-calificacion {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 6px;
+    background: #F8F9FA;
+    color: #212529;
+    margin-left: 12px;
+    min-width: 50px;
+    text-align: center;
+}
+
+/* ======================================== */
+/* LOADING */
+/* ======================================== */
+.loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(248, 249, 250, 0.95);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 32px;
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(28, 63, 111, 0.2);
+    border: 1px solid #E9ECEF;
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #F8F9FA;
+    border-top: 4px solid #1C3F6F;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #212529;
+    text-align: center;
+}
+
+/* ======================================== */
+/* ESTADOS DE ERROR */
+/* ======================================== */
+.error, .no-data {
+    text-align: center;
+    padding: 48px 32px;
+}
+
+.error p, .no-data p {
+    font-size: 18px;
+    color: #6C757D;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.error-btn, .retry-btn {
+    padding: 12px 24px;
+    background: #1C3F6F;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.error-btn:hover, .retry-btn:hover {
+    background: #2C5A9A;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(28, 63, 111, 0.3);
+}
+
+/* ======================================== */
+/* RESPONSIVE DESIGN */
+/* ======================================== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .materias-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+}
+
+/* Móvil */
+@media (max-width: 768px) {
+    .container {
+        margin: 0;
+    }
+    
+    .header {
+        padding: 0 16px;
+        height: 72px;
+    }
+    
+    .header-content {
+        gap: 16px;
+    }
+    
+    .school-logo {
+        height: 44px;
+    }
+    
+    .school-title {
+        font-size: 24px;
+    }
+    
+    .system-title {
+        font-size: 14px;
+    }
+    
+    .selection-panel {
+        padding: 24px 16px 16px;
+    }
+    
+    .panel-card {
+        padding: 24px;
+    }
+    
+    .period-group {
+        flex-direction: column;
+    }
+    
+    .period-label {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .results-section {
+        padding: 16px;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+    }
+    
+    .student-info h2 {
+        font-size: 24px;
+    }
+    
+    .materias-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .materia-card {
+        padding: 20px;
+    }
+}
+
+/* Móvil pequeño */
+@media (max-width: 480px) {
+    .header {
+        height: 64px;
+    }
+    
+    .school-logo {
+        height: 36px;
+    }
+    
+    .school-title {
+        font-size: 20px;
+    }
+    
+    .system-title {
+        font-size: 12px;
+    }
+    
+    .selection-panel {
+        padding: 16px 12px 12px;
+    }
+    
+    .panel-card {
+        padding: 20px;
+        border-radius: 12px;
+    }
+    
+    .form-label {
+        font-size: 14px;
+    }
+    
+    .student-dropdown {
+        height: 44px;
+        font-size: 14px;
+    }
+    
+    .period-label {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .consult-btn {
+        height: 48px;
+        font-size: 14px;
+    }
+}
+
+/* ======================================== */
+/* UTILIDADES */
+/* ======================================== */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Animaciones suaves */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Focus states mejorados para accesibilidad */
+button:focus,
+select:focus,
+input[type="radio"]:focus + label {
+    outline: 2px solid #1C3F6F;
+    outline-offset: 2px;
+}
+
+/* Smooth scroll */
+html {
+    scroll-behavior: smooth;
+}
