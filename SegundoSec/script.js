@@ -2,7 +2,7 @@
 // CONFIGURACIÓN DEL SISTEMA
 // ========================================
 // URL del Google Apps Script desplegado
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyh7CqGU4Uf9sXbnurKaOUJVUONVRlLT4C4UsJgnDdrd9jfS8t7x_kYuYpqXJZfS4U67w/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxb52sRbfTNq3rnT0ME7KfAIvk8CFseWa9GB73WBaHUO8dBdHjNqT3SXWHI5TuH5hFA/exec';
 
 // ========================================
 // ESTADO GLOBAL DE LA APLICACIÓN
