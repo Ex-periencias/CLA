@@ -3,7 +3,8 @@
 // ========================================
 // ⚠️ IMPORTANTE: Reemplaza esta URL con la de tu Google Apps Script desplegado
 // Para obtenerla: Google Apps Script → Deploy → New deployment → Web app → Copy URL
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUw0tDPdwXsLPND5AuY2mcvHLc__peS4gTQYYARuNXNbUIP0Fd8p6JFFQdI3o3zUKeww/exec';
+// Esta es para Primero A
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxszqdJ_nd2QZFLSlZ4HQvPlcXFBWaMwrrn6Px6HE4-8qk1KEYOzK9zVFZ5bKKrGwpgwg/exec';
 
 // ========================================
 // ESTADO GLOBAL DE LA APLICACIÓN
@@ -162,8 +163,14 @@ async function loadStudentData() {
         hideError();
         hideNoData();
         
+        console.log('=== INICIO CONSULTA ===');
+        console.log('Estudiante seleccionado:', selectedStudent);
+        console.log('URL:', SCRIPT_URL);
+        
         // Solicitud simplificada - sin parámetros de grupo ni período
         const response = await fetch(`${SCRIPT_URL}?action=getStudentData&student=${encodeURIComponent(selectedStudent)}`);
+        
+        console.log('Response status:', response.status);
         
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
@@ -171,30 +178,53 @@ async function loadStudentData() {
         
         const data = await response.json();
         
+        // Debug: Mostrar estructura completa de datos recibidos
+        console.log('=== DATA RECIBIDA ===');
+        console.log('Estudiante:', data.student);
+        console.log('Materias:', Object.keys(data.data || {}));
+        
+        // Mostrar detalle de cada materia
+        if (data.data) {
+            Object.keys(data.data).forEach(materia => {
+                const mData = data.data[materia];
+                console.log(`\nMateria: ${materia}`);
+                console.log('  - calificacionTotal:', mData.calificacionTotal);
+                console.log('  - calificacionReal:', mData.calificacionReal);
+                console.log('  - actividades:', mData.actividades);
+                console.log('  - variantes:', mData.variantes);
+                console.log('  - Tipo actividades:', Array.isArray(mData.actividades) ? 'Array' : typeof mData.actividades);
+            });
+        }
+        
         if (data.error) {
             throw new Error(data.error);
         }
         
         if (!data.data || Object.keys(data.data).length === 0) {
+            console.log('No se encontraron datos para el estudiante');
             showNoData();
             hideLoading();
             consultButton.disabled = false;
             return;
         }
         
+        console.log('\n=== MATERIAS ENCONTRADAS ===');
+        console.log('Total:', Object.keys(data.data).length);
+        
         currentStudent = data;
         displayStudentResults(data);
         hideLoading();
         consultButton.disabled = false;
         
+        console.log('=== CONSULTA EXITOSA ===');
+        
     } catch (error) {
+        console.error('Error completo:', error);
         hideLoading();
         showError('Error al cargar datos: ' + error.message + 
                  '<br><br><strong>Verifica:</strong><br>' +
-                 '- Que el nombre del estudiante coincida exactamente<br>' +
-                 '- Que existan pestañas con las materias<br>' +
+                 '- Que el deployment esté actualizado<br>' +
                  '- Ver detalles en la consola (F12)');
-        console.error('Error completo:', error);
         consultButton.disabled = false;
     }
 }
@@ -236,6 +266,8 @@ function renderMaterias(studentData) {
 
 /**
  * Crea una tarjeta profesional para una materia específica
+ * NOTA: Ahora acepta arrays de objetos {nombre, valor} para mantener el orden
+ * También兼容 con estructura anterior de objetos {nombre: valor}
  */
 function createMateriaCard(materiaName, materiaData) {
     const card = document.createElement('div');
@@ -252,7 +284,7 @@ function createMateriaCard(materiaName, materiaData) {
     
     header.appendChild(title);
     
-    // Calificación Real de "Calificación Total"
+    // Calificación Final de la materia
     if (materiaData.calificacionReal !== undefined && materiaData.calificacionReal !== null) {
         const promedioElement = document.createElement('div');
         promedioElement.className = 'materia-promedio';
@@ -274,41 +306,76 @@ function createMateriaCard(materiaName, materiaData) {
     const actividadesList = document.createElement('ul');
     actividadesList.className = 'actividades-list';
     
-    // Agregar actividades regulares (EXCLUYENDO 'Calificación total')
-    if (materiaData.actividades) {
+    // Debug: Mostrar estructura de datos recibida
+    console.log(`Renderizando materia: ${materiaName}`);
+    console.log('Tipo de actividades:', Array.isArray(materiaData.actividades) ? 'Array' : 'Objeto');
+    console.log('Actividades:', materiaData.actividades);
+    
+    // Verificar si hay actividades para mostrar
+    let hayActividades = false;
+    
+    //兼容: NUEVA estructura (arrays) vs ANTIGUA estructura (objetos)
+    if (materiaData.actividades && Array.isArray(materiaData.actividades)) {
+        // Nueva estructura con arrays
+        if (materiaData.actividades.length > 0) {
+            hayActividades = true;
+            materiaData.actividades.forEach(item => {
+                const listItem = createActividadItem(item.nombre, item.valor);
+                actividadesList.appendChild(listItem);
+            });
+        }
+        
+        // Variantes
+        if (materiaData.variantes && Array.isArray(materiaData.variantes) && materiaData.variantes.length > 0) {
+            hayActividades = true;
+            materiaData.variantes.forEach(item => {
+                const listItem = createActividadItem(item.nombre, item.valor);
+                actividadesList.appendChild(listItem);
+            });
+        }
+    } else if (materiaData.actividades && typeof materiaData.actividades === 'object') {
+        // Antigua estructura con objetos (para compatibilidad)
         Object.keys(materiaData.actividades).forEach(activityName => {
             const value = materiaData.actividades[activityName];
-            
-            // EXCLUIR 'Calificación total' de la lista
-            if (activityName.toLowerCase().includes('calificación total') || 
-                activityName.toLowerCase().includes('calificacion total')) {
-                return;
+            // Excluir Calificación Total/Final
+            if (!isCalificacionTotal(activityName)) {
+                hayActividades = true;
+                const listItem = createActividadItem(activityName, value);
+                actividadesList.appendChild(listItem);
             }
-            
-            const listItem = createActividadItem(activityName, value);
-            actividadesList.appendChild(listItem);
         });
+        
+        // Variantes
+        if (materiaData.variantes && typeof materiaData.variantes === 'object') {
+            Object.keys(materiaData.variantes).forEach(variantName => {
+                const value = materiaData.variantes[variantName];
+                if (!isCalificacionTotal(variantName)) {
+                    hayActividades = true;
+                    const listItem = createActividadItem(variantName, value);
+                    actividadesList.appendChild(listItem);
+                }
+            });
+        }
     }
     
-    // Agregar actividades variantes (EXCLUYENDO 'Calificación total')
-    if (materiaData.variantes) {
-        Object.keys(materiaData.variantes).forEach(variantName => {
-            const value = materiaData.variantes[variantName];
-            
-            if (variantName.toLowerCase().includes('calificación total') || 
-                variantName.toLowerCase().includes('calificacion total')) {
-                return;
-            }
-            
-            const listItem = createActividadItem(variantName, value);
-            actividadesList.appendChild(listItem);
-        });
-    }
+    console.log('Hay actividades:', hayActividades);
     
     actividadesContainer.appendChild(actividadesList);
     card.appendChild(actividadesContainer);
     
     return card;
+}
+
+/**
+ * Verificar si el nombre es Calificación Total/Final (para compatibilidad)
+ */
+function isCalificacionTotal(texto) {
+    if (!texto) return false;
+    const textoLower = texto.toString().trim().toLowerCase();
+    return textoLower.includes('calificación total') || 
+           textoLower.includes('calificacion total') ||
+           textoLower.includes('calificación final') ||
+           textoLower.includes('calificacion final');
 }
 
 /**
@@ -430,4 +497,3 @@ function reloadPage() {
 // Exportar funciones para uso global
 window.hideError = hideError;
 window.reloadPage = reloadPage;
-
