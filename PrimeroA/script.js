@@ -3,7 +3,7 @@
 // ========================================
 // ⚠️ IMPORTANTE: Reemplaza esta URL con la de tu Google Apps Script desplegado
 // Para obtenerla: Google Apps Script → Deploy → New deployment → Web app → Copy URL
-const SCRIPT_URL = 'TU_GOOGLE_APPS_SCRIPT_URL_AQUI';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw2KQng6ViHRj3O8XbpbZvZSCsyts9G5dNlMhRzvUtU21dUpdujTPSSTN4Xx1L3bTHTqA/exec';
 
 // ========================================
 // ESTADO GLOBAL DE LA APLICACIÓN
