@@ -30,6 +30,9 @@ async function initializeApp() {
     // Inicializar selector de estudiantes
     initializeStudentSelector();
     
+    // Inicializar botón de consulta
+    initializeConsultButton();
+    
     // Cargar estudiantes al iniciar
     showLoading('Cargando lista de estudiantes...');
     try {
@@ -55,16 +58,33 @@ function initializeStudentSelector() {
 }
 
 /**
+ * Inicializar botón de consulta
+ */
+function initializeConsultButton() {
+    const consultButton = document.getElementById('consultButton');
+    consultButton.addEventListener('click', function() {
+        const selectedStudent = document.getElementById('studentSelect').value;
+        if (selectedStudent) {
+            loadStudentData();
+        } else {
+            showError('Por favor selecciona un estudiante');
+        }
+    });
+}
+
+/**
  * Maneja la selección de un estudiante
  */
 function handleStudentSelection(event) {
     const selectedStudent = event.target.value;
     const consultButton = document.getElementById('consultButton');
     
-    if (selectedStudent) {
-        consultButton.disabled = false;
-    } else {
-        consultButton.disabled = true;
+    // Habilitar o deshabilitar el botón según haya selección
+    consultButton.disabled = !selectedStudent;
+    
+    // Ocultar resultados anteriores al cambiar de estudiante
+    if (!selectedStudent) {
+        document.getElementById('results').style.display = 'none';
     }
 }
 
@@ -410,3 +430,4 @@ function reloadPage() {
 // Exportar funciones para uso global
 window.hideError = hideError;
 window.reloadPage = reloadPage;
+
