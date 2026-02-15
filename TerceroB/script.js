@@ -4,7 +4,8 @@
 // ⚠️ IMPORTANTE: Reemplaza esta URL con la de tu Google Apps Script desplegado
 // Para obtenerla: Google Apps Script → Deploy → New deployment → Web app → Copy URL
 // Esta es para Tercero A
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBJ_f6WmcRI0hyBwTljx83s2tBM2OTsgnb9sgQAMWo59T82EuupvEDeDQbagGYQDZb/exec';
+//const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBJ_f6WmcRI0hyBwTljx83s2tBM2OTsgnb9sgQAMWo59T82EuupvEDeDQbagGYQDZb/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpgbT4jpVym-Hrd0HAd8pr70GpQRpEA0Nr21k5A0DWa-hv7a1gKLXMeXGPhbpIHepi/exec';
 
 // ========================================
 // ESTADO GLOBAL DE LA APLICACIÓN
