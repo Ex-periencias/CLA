@@ -8,7 +8,7 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-3BERPV0DMS');
-    </script>    
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Calificaciones - Colegio Libertadores de América</title>
@@ -28,7 +28,7 @@
                 <!-- Nombre del Colegio -->
                 <div class="school-name">
                     <h1 class="school-title">Colegio Libertadores de América</h1>
-                    <h2 class="system-title">Evaluaciones 3° B</h2>
+                    <h2 class="system-title">Evaluaciones 1° A</h2>
                 </div>
                 
                 <!-- Espacio para perfil/menú -->
@@ -41,16 +41,27 @@
         <!-- Panel de Selección -->
         <section class="selection-panel">
             <div class="panel-card">
+                <!-- Selector de Periodo/Grupo -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="studentSelect" class="form-label">Seleccionar Alumno:</label>
-                        <select id="studentSelect" class="student-dropdown">
-                            <option value="">-- Selecciona un alumno --</option>
+                        <label for="periodSelect" class="form-label">Seleccionar Grupo/Periodo:</label>
+                        <select id="periodSelect" class="student-dropdown">
+                            <option value="">-- Cargando periodos... --</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="form-row">
+                <!-- Selector de Alumno (oculto inicialmente) -->
+                <div class="form-row" id="studentSelectionRow" style="display: none; margin-top: 15px;">
+                    <div class="form-group">
+                        <label for="studentSelect" class="form-label">Seleccionar Alumno:</label>
+                        <select id="studentSelect" class="student-dropdown">
+                            <option value="">-- Primero selecciona un periodo --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row" style="margin-top: 20px;">
                     <button id="consultButton" class="consult-btn" disabled>
                         Consultar Calificaciones
                     </button>
