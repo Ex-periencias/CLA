@@ -1,22 +1,22 @@
 // ========================================
 // CONFIGURACIÓN DEL SISTEMA
 // ========================================
-// ⚠️ IMPORTANTE: Reemplaza esta URL con la de tu Google Apps Script desplegado
-// Para obtenerla: Google Apps Script → Deploy → New deployment → Web app → Copy URL
-// Esta es para Tercero A
-//const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzt_tUkM-xQsOF91hbPkNVNPBzeu4jZ8Frq_LZhVYnZi1ZXjG62AYGsd_5teqoF9xYi/exec';
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7QH5jY0NqfF3ST7n56V3O2pNwuoiJ2Q8R6Bdl10HZS0H-NpLGTjunYxU07wUui_RD/exec';
+// ⚠️ IMPORTANTE: Mantén un solo deployment de Google Apps Script.
+// El script ahora usará la Hoja Maestra que configures en su código.
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFYdUf7OFn1KUjRqma091iZDNWnzHZx0-nkB_jwATPInu8TlOIilN8kcJOGQRlDWVizw/exec';
 
 // ========================================
 // ESTADO GLOBAL DE LA APLICACIÓN
 // ========================================
+let periods = [];
 let students = [];
+let currentPeriodSheetId = null;
 let currentStudent = null;
 
 // ========================================
 // INICIALIZACIÓN
 // ========================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initializeApp();
 });
 
@@ -28,114 +28,168 @@ async function initializeApp() {
         showError(configCheck.message);
         return;
     }
-    
-    // Inicializar selector de estudiantes
-    initializeStudentSelector();
-    
-    // Inicializar botón de consulta
-    initializeConsultButton();
-    
-    // Cargar estudiantes al iniciar
-    showLoading('Cargando lista de estudiantes...');
+
+    // Inicializar selectores
+    initializeSelectors();
+
+    // Cargar periodos al iniciar
+    showLoading('Cargando periodos y grupos...');
     try {
-        await loadStudents();
+        await loadPeriods();
         hideLoading();
     } catch (error) {
         hideLoading();
-        showError('Error al cargar estudiantes: ' + error.message + 
-                 '<br><br><strong>Verifica:</strong><br>' +
-                 '- Que la URL del Google Apps Script sea correcta<br>' +
-                 '- Que la hoja se llame "Lista de Alumnos"<br>' +
-                 '- Que los nombres estén en la Columna B');
+        showError('Error al cargar la lista de periodos: ' + error.message);
         console.error('Error completo:', error);
     }
 }
 
 /**
- * Inicializar selector de estudiantes
+ * Inicializar eventos
  */
-function initializeStudentSelector() {
+function initializeSelectors() {
+    const periodSelect = document.getElementById('periodSelect');
+    periodSelect.addEventListener('change', handlePeriodSelection);
+
     const studentSelect = document.getElementById('studentSelect');
     studentSelect.addEventListener('change', handleStudentSelection);
-}
 
-/**
- * Inicializar botón de consulta
- */
-function initializeConsultButton() {
     const consultButton = document.getElementById('consultButton');
-    consultButton.addEventListener('click', function() {
+    consultButton.addEventListener('click', function () {
         const selectedStudent = document.getElementById('studentSelect').value;
-        if (selectedStudent) {
+        if (selectedStudent && currentPeriodSheetId) {
             loadStudentData();
-        } else {
-            showError('Por favor selecciona un estudiante');
+        }
+    });
+
+    document.getElementById('refreshButton')?.addEventListener('click', function () {
+        if (currentStudent && currentPeriodSheetId) {
+            loadStudentData();
         }
     });
 }
 
 /**
- * Maneja la selección de un estudiante
+ * Carga la lista de periodos (hojas disponibles) desde la Hoja Maestra
  */
-function handleStudentSelection(event) {
-    const selectedStudent = event.target.value;
-    const consultButton = document.getElementById('consultButton');
-    
-    // Habilitar o deshabilitar el botón según haya selección
-    consultButton.disabled = !selectedStudent;
-    
-    // Ocultar resultados anteriores al cambiar de estudiante
-    if (!selectedStudent) {
-        document.getElementById('results').style.display = 'none';
-    }
-}
-
-/**
- * Carga la lista de estudiantes desde Google Apps Script
- */
-async function loadStudents() {
+async function loadPeriods() {
     try {
-        console.log('Cargando estudiantes...');
-        console.log('URL del script:', SCRIPT_URL);
-        
-        const response = await fetch(`${SCRIPT_URL}?action=getStudents`);
-        
+        const response = await fetch(`${SCRIPT_URL}?action=getPeriods`, { redirect: 'follow' });
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+            const errorText = await response.text();
+            throw new Error(`Error HTTP: ${response.status} - ${errorText.substring(0, 200)}...`);
         }
-        
+
         const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
+        if (data.error) throw new Error(data.error);
+
+        periods = data.periods || [];
+        populatePeriodDropdown();
+
+        if (periods.length === 0) {
+            showError('No se encontraron periodos configurados en la Hoja Maestra.');
         }
-        
-        students = data.students || [];
-        populateStudentDropdown();
-        console.log('Estudiantes cargados:', students.length);
-        
-        if (students.length === 0) {
-            showError('No se encontraron estudiantes en la hoja "Lista de Alumnos".<br><br>Verifica que:<br>• La hoja exista y se llame exactamente "Lista de Alumnos"<br>• Los nombres estén en la Columna B');
-        }
-        
     } catch (error) {
-        console.error('Error al cargar estudiantes:', error);
+        console.error('Error al cargar periodos:', error);
         throw error;
     }
 }
 
+function populatePeriodDropdown() {
+    const select = document.getElementById('periodSelect');
+    select.innerHTML = '<option value="">-- Selecciona un periodo/grupo --</option>';
+
+    // Obtener la ruta actual (ej: /Escuela/PrimeroA/index.html)
+    // Convertimos a minúsculas y decodificamos por si hay espacios (%20)
+    const currentPath = decodeURIComponent(window.location.pathname.toLowerCase());
+
+    let periodsConfigurados = 0;
+
+    periods.forEach(period => {
+        // Obtenemos el identificador de la columna C (o lo dejamos vacío si no hay)
+        const carpetaEsperada = (period.carpeta || '').toLowerCase().trim();
+
+        // La magia de la carpeta: 
+        // 1. Si NO configuraron la columna C en este periodo, lo mostramos SIEMPRE.
+        // 2. Si SI la configuraron, validamos que la ruta actual (pathname) contenga ese texto.
+        // Ej: Si la ruta es ".../PrimeroA/..." y la carpeta es "primeroa" -> Hace match
+        if (carpetaEsperada === '' || currentPath.includes(carpetaEsperada)) {
+            const option = document.createElement('option');
+            option.value = period.sheetId; // Guardamos el ID del documento
+            option.textContent = period.nombre; // Mostramos el nombre bonito
+            select.appendChild(option);
+            periodsConfigurados++;
+        }
+    });
+
+    if (periodsConfigurados === 0) {
+        showError('No hay periodos configurados para esta sección del sitio.');
+    }
+}
+
 /**
- * Llena el dropdown con la lista de estudiantes
+ * Maneja la selección de un Periodo
  */
+async function handlePeriodSelection(event) {
+    const selectedSheetId = event.target.value;
+    const studentSelectionRow = document.getElementById('studentSelectionRow');
+    const studentSelect = document.getElementById('studentSelect');
+    const consultButton = document.getElementById('consultButton');
+
+    // Esconder resultados anteriores
+    document.getElementById('results').style.display = 'none';
+    consultButton.disabled = true;
+    studentSelect.innerHTML = '<option value="">-- Selecciona un alumno --</option>';
+
+    if (!selectedSheetId) {
+        studentSelectionRow.style.display = 'none';
+        currentPeriodSheetId = null;
+        return;
+    }
+
+    currentPeriodSheetId = selectedSheetId;
+    studentSelectionRow.style.display = 'block';
+
+    // Cargar alumnos para este periodo en específico
+    showLoading('Cargando alumnos de este grupo...');
+    try {
+        await loadStudentsForPeriod(selectedSheetId);
+        hideLoading();
+    } catch (error) {
+        hideLoading();
+        showError('Error al cargar alumnos: ' + error.message);
+    }
+}
+
+/**
+ * Carga la lista de estudiantes para el Periodo (Hoja de Google) seleccionada
+ */
+async function loadStudentsForPeriod(sheetId) {
+    try {
+        const response = await fetch(`${SCRIPT_URL}?action=getStudents&sheetId=${encodeURIComponent(sheetId)}`, { redirect: 'follow' });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Error HTTP: ${response.status} - ${errorText.substring(0, 200)}...`);
+        }
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+
+        students = data.students || [];
+        populateStudentDropdown();
+
+        if (students.length === 0) {
+            showError('No se encontraron estudiantes en la hoja seleccionada.');
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
 function populateStudentDropdown() {
     const select = document.getElementById('studentSelect');
     select.innerHTML = '<option value="">-- Selecciona un alumno --</option>';
-    
-    if (students.length === 0) {
-        console.log('No hay estudiantes en la lista');
-        return;
-    }
-    
+
     students.forEach(student => {
         const option = document.createElement('option');
         option.value = student.nombre;
@@ -144,120 +198,85 @@ function populateStudentDropdown() {
     });
 }
 
+function handleStudentSelection(event) {
+    const selectedStudent = event.target.value;
+    const consultButton = document.getElementById('consultButton');
+    consultButton.disabled = !selectedStudent;
+}
+
 /**
- * Carga los datos de un estudiante específico
+ * Carga los datos de un estudiante utilizando el sheetId actual
  */
 async function loadStudentData() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudent = studentSelect.value;
     const consultButton = document.getElementById('consultButton');
-    
-    if (!selectedStudent) {
-        showError('Por favor selecciona un estudiante');
-        return;
-    }
-    
+
+    if (!selectedStudent || !currentPeriodSheetId) return;
+
     try {
-        // Deshabilitar botón y mostrar loading
         consultButton.disabled = true;
-        showLoading(`Cargando datos de ${selectedStudent}...`);
+        showLoading(`Cargando calificaciones de ${selectedStudent}...`);
         hideError();
         hideNoData();
-        
-        console.log('=== INICIO CONSULTA ===');
-        console.log('Estudiante seleccionado:', selectedStudent);
-        console.log('URL:', SCRIPT_URL);
-        
-        // Solicitud simplificada - sin parámetros de grupo ni período
-        const response = await fetch(`${SCRIPT_URL}?action=getStudentData&student=${encodeURIComponent(selectedStudent)}`);
-        
-        console.log('Response status:', response.status);
-        
+
+        // Pasamos accion, sheetId y el nombre del estudiante
+        const url = `${SCRIPT_URL}?action=getStudentData&sheetId=${encodeURIComponent(currentPeriodSheetId)}&student=${encodeURIComponent(selectedStudent)}`;
+        const response = await fetch(url, { redirect: 'follow' });
+
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`Error HTTP: ${response.status} - ${errorText.substring(0, 200)}...`);
         }
-        
+
         const data = await response.json();
-        
-        // Debug: Mostrar estructura completa de datos recibidos
-        console.log('=== DATA RECIBIDA ===');
-        console.log('Estudiante:', data.student);
-        console.log('Materias:', Object.keys(data.data || {}));
-        
-        // Mostrar detalle de cada materia
-        if (data.data) {
-            Object.keys(data.data).forEach(materia => {
-                const mData = data.data[materia];
-                console.log(`\nMateria: ${materia}`);
-                console.log('  - calificacionTotal:', mData.calificacionTotal);
-                console.log('  - calificacionReal:', mData.calificacionReal);
-                console.log('  - actividades:', mData.actividades);
-                console.log('  - variantes:', mData.variantes);
-                console.log('  - Tipo actividades:', Array.isArray(mData.actividades) ? 'Array' : typeof mData.actividades);
-            });
-        }
-        
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
+        if (data.error) throw new Error(data.error);
+
         if (!data.data || Object.keys(data.data).length === 0) {
-            console.log('No se encontraron datos para el estudiante');
             showNoData();
             hideLoading();
             consultButton.disabled = false;
             return;
         }
-        
-        console.log('\n=== MATERIAS ENCONTRADAS ===');
-        console.log('Total:', Object.keys(data.data).length);
-        
+
         currentStudent = data;
         displayStudentResults(data);
         hideLoading();
         consultButton.disabled = false;
-        
-        console.log('=== CONSULTA EXITOSA ===');
-        
+
     } catch (error) {
-        console.error('Error completo:', error);
         hideLoading();
-        showError('Error al cargar datos: ' + error.message + 
-                 '<br><br><strong>Verifica:</strong><br>' +
-                 '- Que el deployment esté actualizado<br>' +
-                 '- Ver detalles en la consola (F12)');
+        showError('Error al cargar calificaciones: ' + error.message);
         consultButton.disabled = false;
     }
 }
 
 /**
- * Muestra los resultados del estudiante en la interfaz
+ * Muestra los resultados en pantalla
  */
 function displayStudentResults(data) {
-    // Actualizar nombre del estudiante
     const studentNameElement = document.getElementById('studentName');
     const studentMetaElement = document.getElementById('studentMeta');
-    
+
+    // Actualizar nombre del estudiante
     studentNameElement.textContent = data.student;
-    studentMetaElement.textContent = 'Calificaciones del Alumno';
-    
-    // Mostrar contenedor de resultados
+
+    // Cambiar "Evaluaciones 1°A" al título del periodo seleccionado
+    const periodSelect = document.getElementById('periodSelect');
+    const periodName = periodSelect.options[periodSelect.selectedIndex].text;
+    studentMetaElement.textContent = `Calificaciones - ${periodName}`;
+    document.querySelector('.system-title').textContent = periodName; // Actualizamos también el título general de arriba
+
     const resultsContainer = document.getElementById('results');
     resultsContainer.style.display = 'block';
-    
-    // Renderizar materias
+
     renderMaterias(data.data);
-    
-    hideLoading();
 }
 
-/**
- * Renderiza todas las materias del estudiante
- */
 function renderMaterias(studentData) {
     const container = document.getElementById('materiasContainer');
     container.innerHTML = '';
-    
+
     Object.keys(studentData).forEach(materiaName => {
         const materiaData = studentData[materiaName];
         const materiaCard = createMateriaCard(materiaName, materiaData);
@@ -265,173 +284,83 @@ function renderMaterias(studentData) {
     });
 }
 
-/**
- * Crea una tarjeta profesional para una materia específica
- * NOTA: Ahora acepta arrays de objetos {nombre, valor} para mantener el orden
- * También兼容 con estructura anterior de objetos {nombre: valor}
- */
 function createMateriaCard(materiaName, materiaData) {
     const card = document.createElement('div');
     card.className = 'materia-card fade-in';
-    
-    // Header de la materia
+
     const header = document.createElement('div');
     header.className = 'materia-header';
-    
-    // Título de la materia
+
     const title = document.createElement('h3');
     title.className = 'materia-title';
     title.textContent = materiaName;
-    
     header.appendChild(title);
-    
-    // Calificación Final de la materia
+
     if (materiaData.calificacionReal !== undefined && materiaData.calificacionReal !== null) {
         const promedioElement = document.createElement('div');
         promedioElement.className = 'materia-promedio';
         promedioElement.textContent = formatValue(materiaData.calificacionReal);
         header.appendChild(promedioElement);
-    } else if (materiaData.calificacionTotal !== undefined) {
+    } else if (materiaData.calificacionTotal !== undefined && materiaData.calificacionTotal !== null) {
         const promedioElement = document.createElement('div');
         promedioElement.className = 'materia-promedio';
         promedioElement.textContent = formatValue(materiaData.calificacionTotal);
         header.appendChild(promedioElement);
     }
-    
+
     card.appendChild(header);
-    
-    // Lista de actividades
+
     const actividadesContainer = document.createElement('div');
     actividadesContainer.className = 'materia-actividades';
-    
     const actividadesList = document.createElement('ul');
     actividadesList.className = 'actividades-list';
-    
-    // Debug: Mostrar estructura de datos recibida
-    console.log(`Renderizando materia: ${materiaName}`);
-    console.log('Tipo de actividades:', Array.isArray(materiaData.actividades) ? 'Array' : 'Objeto');
-    console.log('Actividades:', materiaData.actividades);
-    
-    // Verificar si hay actividades para mostrar
-    let hayActividades = false;
-    
-    //兼容: NUEVA estructura (arrays) vs ANTIGUA estructura (objetos)
+
     if (materiaData.actividades && Array.isArray(materiaData.actividades)) {
-        // Nueva estructura con arrays
-        if (materiaData.actividades.length > 0) {
-            hayActividades = true;
-            materiaData.actividades.forEach(item => {
-                const listItem = createActividadItem(item.nombre, item.valor);
-                actividadesList.appendChild(listItem);
-            });
-        }
-        
-        // Variantes
-        if (materiaData.variantes && Array.isArray(materiaData.variantes) && materiaData.variantes.length > 0) {
-            hayActividades = true;
-            materiaData.variantes.forEach(item => {
-                const listItem = createActividadItem(item.nombre, item.valor);
-                actividadesList.appendChild(listItem);
-            });
-        }
-    } else if (materiaData.actividades && typeof materiaData.actividades === 'object') {
-        // Antigua estructura con objetos (para compatibilidad)
-        Object.keys(materiaData.actividades).forEach(activityName => {
-            const value = materiaData.actividades[activityName];
-            // Excluir Calificación Total/Final
-            if (!isCalificacionTotal(activityName)) {
-                hayActividades = true;
-                const listItem = createActividadItem(activityName, value);
-                actividadesList.appendChild(listItem);
-            }
+        materiaData.actividades.forEach(item => {
+            actividadesList.appendChild(createActividadItem(item.nombre, item.valor));
         });
-        
-        // Variantes
-        if (materiaData.variantes && typeof materiaData.variantes === 'object') {
-            Object.keys(materiaData.variantes).forEach(variantName => {
-                const value = materiaData.variantes[variantName];
-                if (!isCalificacionTotal(variantName)) {
-                    hayActividades = true;
-                    const listItem = createActividadItem(variantName, value);
-                    actividadesList.appendChild(listItem);
-                }
+
+        if (materiaData.variantes && Array.isArray(materiaData.variantes)) {
+            materiaData.variantes.forEach(item => {
+                actividadesList.appendChild(createActividadItem(item.nombre, item.valor));
             });
         }
     }
-    
-    console.log('Hay actividades:', hayActividades);
-    
+
     actividadesContainer.appendChild(actividadesList);
     card.appendChild(actividadesContainer);
-    
+
     return card;
 }
 
-/**
- * Verificar si el nombre es Calificación Total/Final (para compatibilidad)
- */
-function isCalificacionTotal(texto) {
-    if (!texto) return false;
-    const textoLower = texto.toString().trim().toLowerCase();
-    return textoLower.includes('calificación total') || 
-           textoLower.includes('calificacion total') ||
-           textoLower.includes('calificación final') ||
-           textoLower.includes('calificacion final');
-}
-
-/**
- * Crea un elemento de lista para una actividad específica
- */
 function createActividadItem(activityName, value) {
     const listItem = document.createElement('li');
     listItem.className = 'actividad-item';
-    
+
     const nombreElement = document.createElement('span');
     nombreElement.className = 'actividad-nombre';
     nombreElement.textContent = activityName;
-    
+
     const calificacionElement = document.createElement('span');
     calificacionElement.className = 'actividad-calificacion';
     calificacionElement.textContent = formatValue(value);
-    
+
     listItem.appendChild(nombreElement);
     listItem.appendChild(calificacionElement);
-    
+
     return listItem;
 }
 
-/**
- * Formatea el valor para mostrarlo correctamente
- */
 function formatValue(value) {
-    if (value === null || value === undefined || value === '') {
-        return '-';
-    }
-    
-    if (typeof value === 'number') {
-        if (Number.isInteger(value)) {
-            return value.toString();
-        } else {
-            return value.toFixed(2);
-        }
-    }
-    
+    if (value === null || value === undefined || value === '') return '-';
+    if (typeof value === 'number') return Number.isInteger(value) ? value.toString() : value.toFixed(2);
     return value.toString();
 }
 
-/**
- * Funciones de utilidad para mostrar/ocultar elementos
- */
 function showLoading(message) {
     const loadingElement = document.getElementById('loading');
     const loadingText = loadingElement.querySelector('p');
-    
-    if (message) {
-        loadingText.textContent = message;
-    } else {
-        loadingText.textContent = 'Cargando datos...';
-    }
-    
+    loadingText.textContent = message || 'Cargando datos...';
     loadingElement.style.display = 'block';
 }
 
@@ -441,9 +370,7 @@ function hideLoading() {
 
 function showError(message) {
     const errorElement = document.getElementById('error');
-    const errorMessageElement = document.getElementById('errorMessage');
-    
-    errorMessageElement.innerHTML = message;
+    document.getElementById('errorMessage').innerHTML = message;
     errorElement.style.display = 'block';
 }
 
@@ -459,42 +386,16 @@ function hideNoData() {
     document.getElementById('noData').style.display = 'none';
 }
 
-/**
- * Validación de configuración
- */
 function validateConfig() {
-    if (SCRIPT_URL === 'TU_GOOGLE_APPS_SCRIPT_URL_AQUI' || 
-        SCRIPT_URL === '' || 
-        !SCRIPT_URL.includes('script.google.com')) {
-        return {
-            valid: false,
-            message: '⚠️ CONFIGURACIÓN REQUERIDA\n\n' +
-                    'La URL del Google Apps Script no está configurada.\n\n' +
-                    'Pasos para configurar:\n' +
-                    '1. Abre el archivo script.js\n' +
-                    '2. En la línea 6, reemplaza "TU_GOOGLE_APPS_SCRIPT_URL_AQUI"\n' +
-                    '3. Por la URL de tu deployment (https://script.google.com/macros/s/.../exec)'
-        };
+    if (SCRIPT_URL === 'TU_GOOGLE_APPS_SCRIPT_URL_AQUI' || !SCRIPT_URL.includes('script.google.com')) {
+        return { valid: false, message: 'URL del Google Apps Script no configurada.' };
     }
     return { valid: true };
 }
 
-/**
- * Función para actualizar datos (botón refresh)
- */
-document.getElementById('refreshButton')?.addEventListener('click', function() {
-    if (currentStudent) {
-        loadStudentData();
-    }
-});
-
-/**
- * Función para recargar la página
- */
 function reloadPage() {
     window.location.reload();
 }
 
-// Exportar funciones para uso global
 window.hideError = hideError;
 window.reloadPage = reloadPage;
